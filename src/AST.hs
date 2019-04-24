@@ -1,3 +1,4 @@
+-- Data defnitions for the Abstrast Syntax Tree
 module AST where
 
 data Const =

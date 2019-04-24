@@ -39,18 +39,6 @@ parseFunctionBody tokens
     where
       (statements, rest) = parseStatementList tokens
 
--- parseFunction :: [Lex.Token] -> AST.FuncDecl
--- parseFunction (t1:t2:t3:rest) = 
---   let (return_type, func_name, rest') = case (t1:t2:t3:rest) of
---           (Lex.IntKeyword : (Lex.Identifier name) : Lex.OpenParen : rest) -> (AST.IntType, (AST.Id name), rest')
---           (Lex.CharKeyword : (Lex.Identifier name) : Lex.OpenParen : rest) -> (AST.CharType, (AST.Id name), rest')
---           _ -> error "Parse error in parseFunctionBody : Unknown return type or name"
---       (func_params, rest'') = parseFunctionParams rest'
---       func_body = case rest'' of
---           (Lex.OpenBrace : rest''') -> parseFunctionBody rest''
---           _ -> error "Expected brace to open function body"
---   in  AST.FuncDecl return_type func_name func_params func_body
-
 parseFunction :: [Lex.Token] -> AST.FuncDecl
 parseFunction (t1:t2:t3:rest) = AST.FuncDecl return_type func_name func_params func_body
   where

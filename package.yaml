@@ -37,6 +37,8 @@ executables:
     - -with-rtsopts=-N
     dependencies:
     - hcc
+    - split
+    - process
 
 tests:
   hcc-test:

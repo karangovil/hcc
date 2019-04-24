@@ -17,7 +17,8 @@ generateFunction h (AST.FuncDecl _ (AST.Id func_name ) _ (AST.FuncBody func_body
     hPutStrLn h ("_" ++ func_name ++ ":")
     mapM_ (generateStatement h) func_body
 
-generate :: AST.Program -> IO ()
-generate (AST.Program func_decl) = do
-    withFile "assembly.s" WriteMode $ \handle -> do
+generate :: String -> AST.Program -> IO ()
+generate fileName (AST.Program func_decl) = do
+    withFile fileName WriteMode $ \handle -> do
+      hPutStrLn handle "    .globl _main"
       generateFunction handle func_decl
