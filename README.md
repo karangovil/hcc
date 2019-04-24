@@ -11,7 +11,7 @@ An incremental (growing slowly!) compiler for C written in Haskell
 stack build
 ````
 
-* To run it, invoke the `hcc` script in the project root
+* To run it, invoke the `hcc` executable via `stack exec` in the project root
 ```
 stack exec hcc-exe /path/to/source.c
 ```
