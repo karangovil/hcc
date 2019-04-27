@@ -51,5 +51,5 @@ parseFunction (t1:t2:t3:rest) = AST.FuncDecl return_type func_name func_params f
           (Lex.OpenBrace : rest''') -> parseFunctionBody rest'''
           _ -> error "Expected brace to open function body"  
 
-parse :: [Lex.Token] -> AST.Program
-parse tokens = AST.Program (parseFunction tokens)
+parseProgram :: [Lex.Token] -> AST.Program
+parseProgram tokens = AST.Program (parseFunction tokens)

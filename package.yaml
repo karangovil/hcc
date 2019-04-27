@@ -39,6 +39,7 @@ executables:
     - hcc
     - split
     - process
+    - transformers
 
 tests:
   hcc-test:
@@ -50,3 +51,5 @@ tests:
     - -with-rtsopts=-N
     dependencies:
     - hcc
+    - hspec
+    - parsec

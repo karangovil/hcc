@@ -81,7 +81,10 @@ lex1 =
     <||> intLiteral
     <||> identifier
 
-lexer :: String -> Maybe [Token]
-lexer s = case x of Left _ -> Nothing
-                    Right xs -> Just xs
-    where x = parse ((many lex1) <* eof) "" s
+-- lexer :: String -> Maybe [Token]
+-- lexer s = case x of Left _ -> Nothing
+--                     Right xs -> Just xs
+--     where x = parse ((many lex1) <* eof) "" s
+
+lexer :: String -> Either ParseError [Token]
+lexer s = parse ((many lex1) <* eof) "" s

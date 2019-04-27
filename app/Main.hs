@@ -6,6 +6,7 @@ import System.IO
 import GHC.IO.Handle.Types
 import Data.List.Split
 import System.Process
+import Data.Either
 
 import qualified Lex as L
 import qualified Parse as P
@@ -31,6 +32,7 @@ main = do
   withFile (getFileName args) ReadMode $ \handle -> do
     outFileName <- getOutFileNameFromHandle handle
     contents <- hGetContents handle
-    mapM_ (C.generate (outFileName ++ ".s")) (P.parse <$> L.lexer contents)
+    let result = fromRight "Failed to generate assembly" (C.generate <$> (P.parseProgram <$> L.lexer contents))
+    writeFile (outFileName ++ ".s") result
     callCommand ("gcc " ++ outFileName ++ ".s -o " ++ outFileName)
     putStrLn ("Generated executable " ++ outFileName)
