@@ -10,7 +10,7 @@ An incremental (growing slowly!) compiler for C written in Haskell
 ```
 stack install
 ````
-Note that stack install will put the executable on the path whereas stack build will only generate the executable in the `.local\bin` directory. the executable `hcc` expects the stack exectuable (`hcc-exe`) to be on the path.
+Note that stack install will put the executable on the path whereas stack build will only generate the executable in the `~/.local/bin` directory. the executable `hcc` expects the stack exectuable (`hcc-exe`) to be on the path.
 
 * To run it, invoke the `hcc` executable in the project root
 ```
