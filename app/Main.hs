@@ -1,11 +1,9 @@
 module Main where
 
-import Control.Monad
 import System.Environment
 import System.IO
 import GHC.IO.Handle.Types
-import Data.List.Split
-import System.Process
+import Data.List.Split (splitOn)
 import Data.Either
 
 import qualified Lex as L
@@ -32,7 +30,8 @@ main = do
   withFile (getFileName args) ReadMode $ \handle -> do
     outFileName <- getOutFileNameFromHandle handle
     contents <- hGetContents handle
-    let result = fromRight "Failed to generate assembly" (C.generate <$> (P.parseProgram <$> L.lexer contents))
+    --print contents
+    let res = (C.generate <$> (P.parseProgram <$> L.lexer contents))
+    --print res
+    let result = fromRight "Failed to generate assembly" res
     writeFile (outFileName ++ ".s") result
-    callCommand ("gcc " ++ outFileName ++ ".s -o " ++ outFileName)
-    putStrLn ("Generated executable " ++ outFileName)

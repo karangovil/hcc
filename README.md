@@ -6,16 +6,26 @@ An incremental (growing slowly!) compiler for C written in Haskell
 * Install Haskell via stack
 
 ## Usage
-* Build it
+* Build hcc using stack
 ```
-stack build
+stack install
 ````
+Note that stack install will put the executable on the path whereas stack build will only generate the executable in the `.local\bin` directory. the executable `hcc` expects the stack exectuable (`hcc-exe`) to be on the path.
 
-* To run it, invoke the `hcc` executable via `stack exec` in the project root
+* To run it, invoke the `hcc` executable in the project root
 ```
-stack exec hcc-exe /path/to/source.c
+./hcc /path/to/source.c
 ```
 The compiled executable will be in the same directory as the source file, and have the same name (e.g. `source` in the example above).
 
 ## Tests
-[Add tests]
+* Unit tests  are written using [HSpec](https://hspec.github.io/) and can be run using stack
+```
+stack test
+```
+
+* Sample programs are included in `examples` and can be run using `test-examples.sh` script
+```
+./test-examples.sh
+```
+These tests compare the executables against `gcc`.
