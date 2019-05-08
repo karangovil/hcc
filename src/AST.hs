@@ -9,14 +9,22 @@ data Const =
       | String String
       deriving (Show, Eq)
 
---data UnaryOp = 
+data UnaryOp = 
+        Complement
+      | LogicalNegation
+      | Negation
+      | Plus
+      deriving (Show, Eq)
 
 data TypeDef =
         IntType
       | CharType
       deriving (Show, Eq)
 
-data Expr = Const Const deriving (Show, Eq)
+data Expr = 
+        ConstExpr Const 
+      | UnOpExpr UnaryOp Expr
+      deriving (Show, Eq)
 
 data Statement = Return
                | ReturnVal Expr

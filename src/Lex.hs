@@ -9,6 +9,7 @@ data Token
   | OpenParen
   | CloseParen
   | SemiColon
+  | Plus
   | Negation
   | BitComplement
   | LogicalNegation
@@ -29,6 +30,7 @@ instance Show Token where
   show CloseParen      = ")"
   show SemiColon       = ";"
   show Negation        = "-"
+  show Plus            = "+"
   show BitComplement   = "~"
   show LogicalNegation = "!"
   show IntKeyword      = "INT"
@@ -61,6 +63,9 @@ closeBrace = lexeme $ char '}' *> (pure CloseBrace)
 
 semiColon :: Parser Token
 semiColon = lexeme $ char ';' *> (pure SemiColon)
+
+plus :: Parser Token
+plus = lexeme $ char '+' *> (pure Plus)
 
 negation :: Parser Token
 negation = lexeme $ char '-' *> (pure Negation)
@@ -141,6 +146,7 @@ lex1 =
   <||>  openBrace
   <||>  closeBrace
   <||>  semiColon
+  <||>  plus
   <||>  negation
   <||>  bitComplement
   <||>  logicalNegation

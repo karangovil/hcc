@@ -22,20 +22,20 @@ spec = do
 
   describe "parseExpr" $ do
     context "with 34" $ do
-      it "should be (Const (Int 34),[])" $ do
-        parseExpr [IntLiteral 34] `shouldBe` (Const (Int 34),[])
+      it "should be (ConstExpr (Int 34),[])" $ do
+        parseExpr [IntLiteral 34] `shouldBe` (ConstExpr (Int 34),[])
 
     context "with \'c\'" $ do
-      it "should be (Const (Char \'c\'),[])" $ do
-        parseExpr [CharLiteral 'c'] `shouldBe` (Const (Char 'c'),[])
+      it "should be (ConstExpr (Char \'c\'),[])" $ do
+        parseExpr [CharLiteral 'c'] `shouldBe` (ConstExpr (Char 'c'),[])
 
     context "with 034" $ do
-      it "should be (Const (Oct \"34\"),[])" $ do
-        parseExpr [OctLiteral "34"] `shouldBe` (Const (Oct "34"),[])
+      it "should be (ConstExpr (Oct \"34\"),[])" $ do
+        parseExpr [OctLiteral "34"] `shouldBe` (ConstExpr (Oct "34"),[])
 
     context "with 0xFA34" $ do
-      it "should be (Const (Hex \"FA34\"),[])" $ do
-        parseExpr [HexLiteral "FA34"] `shouldBe` (Const (Hex "FA34"),[])
+      it "should be (ConstExpr (Hex \"FA34\"),[])" $ do
+        parseExpr [HexLiteral "FA34"] `shouldBe` (ConstExpr (Hex "FA34"),[])
 
   describe "parseStatementList" $ do
     context "with return;" $ do
@@ -43,8 +43,8 @@ spec = do
         parseStatementList [ReturnKeyword, SemiColon] `shouldBe` ([Return],[])
 
     context "with return 34;" $ do
-      it "should be ([ReturnVal (Const (Int 34))],[])" $ do
-        parseStatementList [ReturnKeyword, IntLiteral 34, SemiColon] `shouldBe` (([ReturnVal (Const (Int 34))],[]))
+      it "should be ([ReturnVal (ConstExpr (Int 34))],[])" $ do
+        parseStatementList [ReturnKeyword, IntLiteral 34, SemiColon] `shouldBe` (([ReturnVal (ConstExpr (Int 34))],[]))
 
     context "with int x" $ do
       it "should be ([],[IntKeyword, Identifier \"x\"])" $ do
@@ -52,8 +52,8 @@ spec = do
 
   describe "parseFunctionBody" $ do
     context "with return 34;" $ do
-      it "should be (FuncBody [ReturnVal (Const (Int 34))])" $ do
-        parseFunctionBody [ReturnKeyword, IntLiteral 34, SemiColon, CloseBrace] `shouldBe` (FuncBody [ReturnVal (Const (Int 34))])
+      it "should be (FuncBody [ReturnVal (ConstExpr (Int 34))])" $ do
+        parseFunctionBody [ReturnKeyword, IntLiteral 34, SemiColon, CloseBrace] `shouldBe` (FuncBody [ReturnVal (ConstExpr (Int 34))])
 
     context "with return;" $ do
       it "should be (FuncBody [Return])" $ do
@@ -69,12 +69,12 @@ spec = do
         parseFunction [IntKeyword, Identifier "main", OpenParen, IntKeyword, Identifier "x", CloseParen, OpenBrace, ReturnKeyword, SemiColon, CloseBrace] `shouldBe` (FuncDecl {typeDef = IntType, identifier = Id "main", funcParams = [FuncParam IntType (Id "x")], funcBody = FuncBody [Return]})
 
     context "with int main() { return 34; }" $ do
-      it "should be (FuncDecl {typeDef = IntType, identifier = Id \"main\", funcParams = [FuncParam IntType (Id \"x\")], funcBody = FuncBody [ReturnVal (Const (Int 34))]})" $ do
-        parseFunction [IntKeyword, Identifier "main", OpenParen, IntKeyword, Identifier "x", CloseParen, OpenBrace, ReturnKeyword, IntLiteral 34, SemiColon, CloseBrace] `shouldBe` (FuncDecl {typeDef = IntType, identifier = Id "main", funcParams = [FuncParam IntType (Id "x")], funcBody = FuncBody [ReturnVal (Const (Int 34))]})
+      it "should be (FuncDecl {typeDef = IntType, identifier = Id \"main\", funcParams = [FuncParam IntType (Id \"x\")], funcBody = FuncBody [ReturnVal (ConstExpr (Int 34))]})" $ do
+        parseFunction [IntKeyword, Identifier "main", OpenParen, IntKeyword, Identifier "x", CloseParen, OpenBrace, ReturnKeyword, IntLiteral 34, SemiColon, CloseBrace] `shouldBe` (FuncDecl {typeDef = IntType, identifier = Id "main", funcParams = [FuncParam IntType (Id "x")], funcBody = FuncBody [ReturnVal (ConstExpr (Int 34))]})
 
   describe "parseProgram" $ do
-    it "should be (Program(FuncDecl {typeDef = IntType, identifier = Id \"main\", funcParams = [FuncParam IntType (Id \"x\")], funcBody = FuncBody [ReturnVal (Const (Int 34))]}))" $ do
-        parseProgram [IntKeyword, Identifier "main", OpenParen, IntKeyword, Identifier "x", CloseParen, OpenBrace, ReturnKeyword, IntLiteral 34, SemiColon, CloseBrace] `shouldBe` (Program(FuncDecl {typeDef = IntType, identifier = Id "main", funcParams = [FuncParam IntType (Id "x")], funcBody = FuncBody [ReturnVal (Const (Int 34))]}))
+    it "should be (Program(FuncDecl {typeDef = IntType, identifier = Id \"main\", funcParams = [FuncParam IntType (Id \"x\")], funcBody = FuncBody [ReturnVal (ConstExpr (Int 34))]}))" $ do
+        parseProgram [IntKeyword, Identifier "main", OpenParen, IntKeyword, Identifier "x", CloseParen, OpenBrace, ReturnKeyword, IntLiteral 34, SemiColon, CloseBrace] `shouldBe` (Program(FuncDecl {typeDef = IntType, identifier = Id "main", funcParams = [FuncParam IntType (Id "x")], funcBody = FuncBody [ReturnVal (ConstExpr (Int 34))]}))
         
 
 main :: IO ()

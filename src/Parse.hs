@@ -17,10 +17,22 @@ parseFunctionParams (Lex.CharKeyword : Lex.Identifier name : rest) =
 parseFunctionParams _ = error "Parse error in parseFunctionParams"
 
 parseExpr :: [Lex.Token] -> (AST.Expr, [Lex.Token])
-parseExpr ((Lex.IntLiteral i) : rest) = (AST.Const (AST.Int i), rest)
-parseExpr ((Lex.CharLiteral c) : rest) = (AST.Const (AST.Char c), rest)
-parseExpr ((Lex.OctLiteral o) : rest) = (AST.Const (AST.Oct o), rest)
-parseExpr ((Lex.HexLiteral h) : rest) = (AST.Const (AST.Hex h), rest)
+parseExpr ((Lex.IntLiteral i) : rest) = (AST.ConstExpr (AST.Int i), rest)
+parseExpr ((Lex.CharLiteral c) : rest) = (AST.ConstExpr (AST.Char c), rest)
+parseExpr ((Lex.OctLiteral o) : rest) = (AST.ConstExpr (AST.Oct o), rest)
+parseExpr ((Lex.HexLiteral h) : rest) = (AST.ConstExpr (AST.Hex h), rest)
+parseExpr (Lex.BitComplement : rest) = (AST.UnOpExpr AST.Complement expr, rest')
+                            where
+                              (expr, rest') = parseExpr rest
+parseExpr (Lex.LogicalNegation : rest) = (AST.UnOpExpr AST.LogicalNegation expr, rest')
+                            where
+                              (expr, rest') = parseExpr rest
+parseExpr (Lex.Negation : rest) = (AST.UnOpExpr AST.Negation expr, rest')
+                            where
+                              (expr, rest') = parseExpr rest
+parseExpr (Lex.Plus : rest) = (AST.UnOpExpr AST.Plus expr, rest')
+                            where
+                              (expr, rest') = parseExpr rest
 parseExpr (token : rest) = error ("Unrecognized token " ++ (show token) ++ " in parseExpr")
 parseExpr [] = error "Expected expression in parseExpr but found none"
 
