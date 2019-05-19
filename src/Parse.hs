@@ -22,12 +22,41 @@ binop_map =
     Map.insert Lex.Division AST.Div .
     Map.insert Lex.Modulo AST.Mod .
     Map.insert Lex.Negation AST.Sub .
-    Map.insert Lex.Plus AST.Add $ Map.empty
+    Map.insert Lex.Plus AST.Add .
+    Map.insert Lex.Equal AST.Equal .
+    Map.insert Lex.NotEqual AST.NotEqual .
+    Map.insert Lex.LessThan AST.Less .
+    Map.insert Lex.LessThanEqual AST.LessEqual .
+    Map.insert Lex.GreaterThan AST.Greater .
+    Map.insert Lex.GreaterThanEqual AST.GreaterEqual .
+    Map.insert Lex.And AST.And .
+    Map.insert Lex.Or AST.Or $ Map.empty
 
 ----------------------------------------------------------------------------
--- parse a factor
+-- Expression parsing grammar
+
+-- <exp> ::= <logical-and-exp> { "||" <logical-and-exp> }
+-- <logical-and-exp> ::= <equality-exp> { "&&" <equality-exp> }
+-- <equality-exp> ::= <relational-exp> { ("!=" | "==") <relational-exp> }
+-- <relational-exp> ::= <additive-exp> { ("<" | ">" | "<=" | ">=") <additive-exp> }
+-- <additive-exp> ::= <term> { ("+" | "-") <term> }
+-- <term> ::= <factor> { ("*" | "/") <factor> }
 -- <factor> ::= "(" <exp> ")" | <unary_op> <factor> | <int>
+-- <unary_op> ::= "!" | "~" | "-"
 ----------------------------------------------------------------------------
+buildBinExpr :: ([Lex.Token] -> (AST.Expr, [Lex.Token])) -> [Lex.Token] -> [Lex.Token] -> (AST.Expr, [Lex.Token])
+buildBinExpr next_level_parser ops tokens =
+      let (left, rest) = next_level_parser tokens
+      in builder left rest
+        where
+          builder left toks@(binop:right)
+            | elem binop ops =
+                let (right', rest) = next_level_parser right
+                    left' = AST.BinOpExpr (fromJust (Map.lookup binop binop_map)) left right'
+                    in builder left' rest
+            | otherwise = (left, toks)
+          builder left [] = (left, [])
+
 parseFactor :: [Lex.Token] -> (AST.Expr, [Lex.Token])
 parseFactor (Lex.OpenParen : factor) = (expr, rest)
             where
@@ -38,48 +67,30 @@ parseFactor (unop : rest)
             | elem unop unops = (AST.UnOpExpr (fromJust (Map.lookup unop unop_map)) expr, rest')
               where
                 (expr, rest') = parseFactor rest
-parseFactor ((Lex.IntLiteral i) : rest) = (AST.ConstExpr (AST.Int i), rest)
+parseFactor ((Lex.IntLiteral i) : rest)  = (AST.ConstExpr (AST.Int i), rest)
 parseFactor ((Lex.CharLiteral c) : rest) = (AST.ConstExpr (AST.Char c), rest)
-parseFactor ((Lex.OctLiteral o) : rest) = (AST.ConstExpr (AST.Oct o), rest)
-parseFactor ((Lex.HexLiteral h) : rest) = (AST.ConstExpr (AST.Hex h), rest)
+parseFactor ((Lex.OctLiteral o) : rest)  = (AST.ConstExpr (AST.Oct o), rest)
+parseFactor ((Lex.HexLiteral h) : rest)  = (AST.ConstExpr (AST.Hex h), rest)
 parseFactor (token : rest) = error ("Unrecognized token " ++ (show token) ++ " in parseFactor")
 parseFactor [] = error "Failed to parse factor"
 
-----------------------------------------------------------------------------
--- parse a term
--- <term> ::= <factor> { ("*" | "/") <factor> }
-----------------------------------------------------------------------------
-buildTerm :: AST.Expr -> [Lex.Token] -> (AST.Expr, [Lex.Token])
-buildTerm left_factor toks@(binop:right)
-      | elem binop [Lex.Multiply, Lex.Division, Lex.Modulo] =
-          let (right_factor, rest) = parseFactor right
-              left_factor' = AST.BinOpExpr (fromJust (Map.lookup binop binop_map)) left_factor right_factor
-          in buildTerm left_factor' rest
-      | otherwise = (left_factor, toks)
-buildTerm left_factor [] = (left_factor, [])      
-
 parseTerm :: [Lex.Token] -> (AST.Expr, [Lex.Token])
-parseTerm tokens =
-    let (left, rest) = parseFactor tokens
-    in buildTerm left rest
+parseTerm tokens = buildBinExpr parseFactor [Lex.Multiply, Lex.Division, Lex.Modulo] tokens
 
-----------------------------------------------------------------------------
--- parse an expression
--- <exp> ::= <term> { ("+" | "-") <term> }
-----------------------------------------------------------------------------
-buildExpr :: AST.Expr -> [Lex.Token] -> (AST.Expr, [Lex.Token])
-buildExpr left_term toks@(binop:right)
-      | elem binop [Lex.Plus, Lex.Negation] =
-          let (right_term, rest) = parseTerm right
-              left_term' = AST.BinOpExpr (fromJust (Map.lookup binop binop_map)) left_term right_term
-              in buildExpr left_term' rest
-      | otherwise = (left_term, toks)
-buildExpr left_term [] = (left_term, []) 
+parseAdditiveExpr :: [Lex.Token] -> (AST.Expr, [Lex.Token])
+parseAdditiveExpr tokens = buildBinExpr parseTerm [Lex.Plus, Lex.Negation] tokens
+
+parseRelationalExpr :: [Lex.Token] -> (AST.Expr, [Lex.Token])
+parseRelationalExpr tokens = buildBinExpr parseAdditiveExpr [Lex.LessThan, Lex.LessThanEqual, Lex.GreaterThan, Lex.GreaterThanEqual] tokens
+
+parseEqualityExpr :: [Lex.Token] -> (AST.Expr, [Lex.Token])
+parseEqualityExpr tokens = buildBinExpr parseRelationalExpr [Lex.Equal, Lex.NotEqual] tokens
+
+parseLogicalAndExpr :: [Lex.Token] -> (AST.Expr, [Lex.Token])
+parseLogicalAndExpr tokens = buildBinExpr parseEqualityExpr [Lex.And] tokens
 
 parseExpr :: [Lex.Token] -> (AST.Expr, [Lex.Token])
-parseExpr tokens =
-    let (left, rest) = parseTerm tokens
-    in buildExpr left rest      
+parseExpr tokens = buildBinExpr parseLogicalAndExpr [Lex.Or] tokens
 
 ----------------------------------------------------------------------------
 -- parse statements that start with return and contain an expression
