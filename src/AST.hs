@@ -11,10 +11,18 @@ data Const =
 
 data UnaryOp = 
         Complement
-      | LogicalNegation
+      | Not
       | Negation
       | Plus
-      deriving (Show, Eq)
+      deriving (Show, Eq, Ord)
+
+data BinaryOp = 
+        Add
+      | Mult
+      | Div
+      | Sub
+      | Mod
+      deriving (Show, Eq, Ord)
 
 data TypeDef =
         IntType
@@ -24,6 +32,7 @@ data TypeDef =
 data Expr = 
         ConstExpr Const 
       | UnOpExpr UnaryOp Expr
+      | BinOpExpr BinaryOp Expr Expr
       deriving (Show, Eq)
 
 data Statement = Return

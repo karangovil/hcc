@@ -26,7 +26,7 @@ library:
   source-dirs:          src
   dependencies:
     - parsec
-
+    - containers
 executables:
   hcc-exe:
     main:                Main.hs
@@ -39,7 +39,6 @@ executables:
     - hcc
     - split
     - process
-    - transformers
 
 tests:
   hcc-test:

@@ -11,8 +11,11 @@ data Token
   | SemiColon
   | Plus
   | Negation
+  | Multiply
+  | Division
+  | Modulo
   | BitComplement
-  | LogicalNegation
+  | Not
   | IntKeyword
   | ReturnKeyword
   | CharKeyword
@@ -21,7 +24,7 @@ data Token
   | CharLiteral Char
   | OctLiteral String
   | HexLiteral String
-  deriving (Eq)
+  deriving (Eq, Ord)
 
 instance Show Token where
   show OpenBrace       = "{"
@@ -31,8 +34,11 @@ instance Show Token where
   show SemiColon       = ";"
   show Negation        = "-"
   show Plus            = "+"
+  show Multiply        = "*"
+  show Division        = "/"
+  show Modulo          = "%"
   show BitComplement   = "~"
-  show LogicalNegation = "!"
+  show Not             = "!"
   show IntKeyword      = "INT"
   show ReturnKeyword   = "RETURN"
   show CharKeyword     = "CHAR"
@@ -67,14 +73,23 @@ semiColon = lexeme $ char ';' *> (pure SemiColon)
 plus :: Parser Token
 plus = lexeme $ char '+' *> (pure Plus)
 
+multiply :: Parser Token
+multiply = lexeme $ char '*' *> (pure Multiply)
+
+division :: Parser Token
+division = lexeme $ char '/' *> (pure Division)
+
+modulo :: Parser Token
+modulo = lexeme $ char '%' *> (pure Modulo)
+
 negation :: Parser Token
 negation = lexeme $ char '-' *> (pure Negation)
 
 bitComplement :: Parser Token
 bitComplement = lexeme $ char '~' *> (pure BitComplement)
 
-logicalNegation :: Parser Token
-logicalNegation = lexeme $ char '!' *> (pure LogicalNegation)
+not' :: Parser Token
+not' = lexeme $ char '!' *> (pure Not)
 
 intKeyword :: Parser Token
 intKeyword = lexeme $ string "int" *> (pure IntKeyword)
@@ -148,8 +163,11 @@ lex1 =
   <||>  semiColon
   <||>  plus
   <||>  negation
+  <||>  multiply
+  <||>  division
+  <||>  modulo
   <||>  bitComplement
-  <||>  logicalNegation
+  <||>  not'
   <||>  intKeyword
   <||>  returnKeyword
   <||>  charKeyword
