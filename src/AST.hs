@@ -22,6 +22,14 @@ data BinaryOp =
       | Div
       | Sub
       | Mod
+      | And
+      | Or
+      | Equal
+      | NotEqual
+      | Less
+      | LessEqual
+      | Greater
+      | GreaterEqual
       deriving (Show, Eq, Ord)
 
 data TypeDef =

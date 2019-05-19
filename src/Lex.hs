@@ -16,6 +16,14 @@ data Token
   | Modulo
   | BitComplement
   | Not
+  | And
+  | Or
+  | Equal
+  | NotEqual
+  | LessThan
+  | LessThanEqual
+  | GreaterThan
+  | GreaterThanEqual
   | IntKeyword
   | ReturnKeyword
   | CharKeyword
@@ -27,26 +35,34 @@ data Token
   deriving (Eq, Ord)
 
 instance Show Token where
-  show OpenBrace       = "{"
-  show CloseBrace      = "}"
-  show OpenParen       = "("
-  show CloseParen      = ")"
-  show SemiColon       = ";"
-  show Negation        = "-"
-  show Plus            = "+"
-  show Multiply        = "*"
-  show Division        = "/"
-  show Modulo          = "%"
-  show BitComplement   = "~"
-  show Not             = "!"
-  show IntKeyword      = "INT"
-  show ReturnKeyword   = "RETURN"
-  show CharKeyword     = "CHAR"
-  show (IntLiteral i)  = show i
-  show (CharLiteral c) = show c
-  show (OctLiteral o)  = show o
-  show (HexLiteral h)  = show h
-  show (Identifier id) = id
+  show OpenBrace        = "{"
+  show CloseBrace       = "}"
+  show OpenParen        = "("
+  show CloseParen       = ")"
+  show SemiColon        = ";"
+  show Negation         = "-"
+  show Plus             = "+"
+  show Multiply         = "*"
+  show Division         = "/"
+  show Modulo           = "%"
+  show BitComplement    = "~"
+  show Not              = "!"
+  show And              = "&&"
+  show Or               = "||"
+  show Equal            = "=="
+  show NotEqual         = "!="
+  show LessThan         = "<"
+  show LessThanEqual    = "<="
+  show GreaterThan      = ">"
+  show GreaterThanEqual = ">="
+  show IntKeyword       = "INT"
+  show ReturnKeyword    = "RETURN"
+  show CharKeyword      = "CHAR"
+  show (IntLiteral i)   = show i
+  show (CharLiteral c)  = show c
+  show (OctLiteral o)   = show o
+  show (HexLiteral h)   = show h
+  show (Identifier id)  = id
 
 ws :: Parser String
 ws = many (oneOf " \t \n")
@@ -90,6 +106,30 @@ bitComplement = lexeme $ char '~' *> (pure BitComplement)
 
 not' :: Parser Token
 not' = lexeme $ char '!' *> (pure Not)
+
+and' :: Parser Token
+and' = lexeme $ string "&&" *> (pure And)
+
+or' :: Parser Token
+or' = lexeme $ string "||" *> (pure Or)
+
+equal' :: Parser Token
+equal' = lexeme $ string "==" *> (pure Equal)
+
+notEqual :: Parser Token
+notEqual = lexeme $ string "!=" *> (pure NotEqual)
+
+lessThan :: Parser Token
+lessThan = lexeme $ char '<' *> (pure LessThan)
+
+lessThanEqual :: Parser Token
+lessThanEqual = lexeme $ string "<=" *> (pure LessThanEqual)
+
+greaterThan :: Parser Token
+greaterThan = lexeme $ char '>' *> (pure GreaterThan)
+
+greaterThanEqual :: Parser Token
+greaterThanEqual = lexeme $ string ">=" *> (pure GreaterThanEqual)
 
 intKeyword :: Parser Token
 intKeyword = lexeme $ string "int" *> (pure IntKeyword)
@@ -168,6 +208,14 @@ lex1 =
   <||>  modulo
   <||>  bitComplement
   <||>  not'
+  <||>  and'
+  <||>  or'
+  <||>  equal'
+  <||>  notEqual
+  <||>  lessThanEqual
+  <||>  lessThan
+  <||>  greaterThanEqual
+  <||>  greaterThan
   <||>  intKeyword
   <||>  returnKeyword
   <||>  charKeyword

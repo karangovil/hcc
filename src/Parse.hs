@@ -68,15 +68,11 @@ parseTerm tokens =
 -- <exp> ::= <term> { ("+" | "-") <term> }
 ----------------------------------------------------------------------------
 buildExpr :: AST.Expr -> [Lex.Token] -> (AST.Expr, [Lex.Token])
-buildExpr left_term toks@(op:right)
-      | op == Lex.Negation =
+buildExpr left_term toks@(binop:right)
+      | elem binop [Lex.Plus, Lex.Negation] =
           let (right_term, rest) = parseTerm right
-              left_term' = AST.BinOpExpr AST.Sub left_term right_term
-          in buildExpr left_term' rest
-      | op == Lex.Plus =
-          let (right_term, rest) = parseTerm right
-              left_term' = AST.BinOpExpr AST.Add left_term right_term
-          in buildExpr left_term' rest
+              left_term' = AST.BinOpExpr (fromJust (Map.lookup binop binop_map)) left_term right_term
+              in buildExpr left_term' rest
       | otherwise = (left_term, toks)
 buildExpr left_term [] = (left_term, []) 
 
