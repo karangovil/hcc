@@ -207,15 +207,15 @@ lex1 =
   <||>  division
   <||>  modulo
   <||>  bitComplement
-  <||>  not'
-  <||>  and'
-  <||>  or'
   <||>  equal'
   <||>  notEqual
   <||>  lessThanEqual
   <||>  lessThan
   <||>  greaterThanEqual
   <||>  greaterThan
+  <||>  not'
+  <||>  and'
+  <||>  or'
   <||>  intKeyword
   <||>  returnKeyword
   <||>  charKeyword

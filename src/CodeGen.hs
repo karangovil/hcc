@@ -1,19 +1,26 @@
 module CodeGen where
 
+import Control.Monad.State
 import Data.Char
 import Numeric
 import qualified AST as AST
 
+counter :: State Int Int
+counter = do
+      x <- get
+      put (x+1)
+      return x
+
 ----------------------------------------------------------------------------
 -- generate assembly for expressions
 ----------------------------------------------------------------------------
-emitComparison :: String -> String
-emitComparison instruction = "    cmpl    %ecx, %eax\n" ++
-                             "    movl    $0, %eax\n" ++
-                             "    " ++ instruction ++ "    %al\n"
+generateComparison :: String -> String
+generateComparison instruction = "    cmpl    %ecx, %eax\n" ++
+                                 "    movl    $0, %eax\n" ++
+                                 "    " ++ instruction ++ "    %al\n"
 
-emitBinOp :: AST.BinaryOp -> String
-emitBinOp op = case op of
+generateBinOp :: AST.BinaryOp -> String
+generateBinOp op = case op of
             AST.Div          -> "    xor     %edx, %edx\n" ++
                                 "    idivl   %ecx\n"
             AST.Mod          -> "    xor     %edx, %edx\n" ++
@@ -22,43 +29,95 @@ emitBinOp op = case op of
             AST.Add          -> "    addl    %ecx, %eax\n"
             AST.Mult         -> "    imul    %ecx, %eax\n"
             AST.Sub          -> "    subl    %ecx, %eax\n"
-            AST.Equal        -> emitComparison "sete"
-            AST.NotEqual     -> emitComparison "setne"
-            AST.Less         -> emitComparison "setl"
-            AST.LessEqual    -> emitComparison "setle"
-            AST.Greater      -> emitComparison "setg"
-            AST.GreaterEqual -> emitComparison "setge"
+            AST.Equal        -> generateComparison "sete"
+            AST.NotEqual     -> generateComparison "setne"
+            AST.Less         -> generateComparison "setl"
+            AST.LessEqual    -> generateComparison "setle"
+            AST.Greater      -> generateComparison "setg"
+            AST.GreaterEqual -> generateComparison "setge"
+
+generateExpressionASM :: AST.Expr -> State Int String
+
+generateExpressionASM (AST.BinOpExpr AST.Or e1 e2) = do
+                e1ASM <- generateExpressionASM e1
+                n <- counter
+                e2ASM <- generateExpressionASM e2
+                return $
+                  e1ASM ++
+                  "    cmpl    $0, %eax\n" ++
+                  "    je      _or_clause_" ++ show n ++ "\n" ++
+                  "    movl    $1, %eax\n" ++
+                  "    jmp     _or_end_" ++ show n ++ "\n" ++
+                  "_or_clause_" ++ show n ++ ":\n" ++
+                  e2ASM ++
+                  "    cmpl    $0, %eax\n" ++
+                  "    movl    $0, %eax\n" ++
+                  "    setne   %al\n" ++
+                  "_or_end_" ++ show n ++ ":\n"
+
+generateExpressionASM (AST.BinOpExpr AST.And e1 e2) = do
+                e1ASM <- generateExpressionASM e1
+                n <- counter
+                e2ASM <- generateExpressionASM e2
+                return $
+                  e1ASM ++
+                  "    cmpl    $0, %eax\n" ++
+                  "    jne     _and_clause_" ++ show n ++ "\n" ++
+                  "    movl    $1, %eax\n" ++
+                  "    jmp     _and_end_" ++ show n ++ "\n" ++
+                  "_and_clause_" ++ show n ++ ":\n" ++
+                  e2ASM ++
+                  "    cmpl    $0, %eax\n" ++
+                  "    movl    $0, %eax\n" ++
+                  "    setne   %al\n" ++
+                  "_and_end_" ++ show n ++ ":\n"             
+
+generateExpressionASM (AST.BinOpExpr op e1 e2) = do
+                e1ASM <- generateExpressionASM e1
+                e2ASM <- generateExpressionASM e2
+                return $
+                  -- e1 -> eax
+                  e1ASM ++
+                  -- eax -> stack
+                  "    push    %rax\n" ++
+                  -- e2 -> eax
+                  e2ASM ++
+                  -- eax -> ecx
+                  "    movl    %eax, %ecx\n" ++
+                  -- pop e1 -> eax
+                  "    pop     %rax\n" ++
+                  -- now e1 is in %eax and e2 is in %ecx
+                  (generateBinOp op)
+
+generateExpressionASM (AST.UnOpExpr AST.Complement expr) = do
+                  exprASM <- generateExpressionASM expr
+                  return $ exprASM ++ "    not    %eax\n"
+generateExpressionASM (AST.UnOpExpr AST.Negation expr) = do
+                  exprASM <- generateExpressionASM expr
+                  return $ exprASM ++ "    neg    %eax\n"
+generateExpressionASM (AST.UnOpExpr AST.Plus expr) = do
+                  exprASM <- generateExpressionASM expr
+                  return $ exprASM
+generateExpressionASM (AST.UnOpExpr AST.Not expr) = do
+                  exprASM <- generateExpressionASM expr
+                  return $ 
+                    exprASM ++
+                    "    cmpl    $0, %eax\n" ++
+                    "    movl    $0, %eax\n" ++
+                    "    sete    %al\n"           
+generateExpressionASM (AST.ConstExpr (AST.Int i))  = do
+                    return $ "    movl    $" ++ (show i) ++ ", %eax\n"
+generateExpressionASM (AST.ConstExpr (AST.Char c)) = do
+                    return $ "    movl    $" ++ (show $ ord c) ++ ", %eax\n"
+generateExpressionASM (AST.ConstExpr (AST.Oct o))  = do
+                    return $ "    movl    $" ++ (show$ fst $ head $ readOct o) ++ ", %eax\n"
+generateExpressionASM (AST.ConstExpr (AST.Hex h))  = do
+                    return $ "    movl    $" ++ (show$ fst $ head $ readHex h) ++ ", %eax\n"
+
+generateExpressionASM _ = error "Expression not supported"
 
 generateExpression :: AST.Expr -> String
-generateExpression (AST.BinOpExpr op e1 e2) =
-                -- e1 -> eax
-                (generateExpression e1) ++
-                -- eax -> stack
-                "    push    %rax\n" ++
-                -- e2 -> eax
-                (generateExpression e2) ++
-                -- eax -> ecx
-                "    movl    %eax, %ecx\n" ++
-                -- pop e1 -> eax
-                "    pop     %rax\n" ++
-                -- now e1 is in %eax and e2 is in %ecx
-                (emitBinOp op)
-
-generateExpression (AST.UnOpExpr AST.Complement expr) = (generateExpression expr) ++ "    not    %eax\n"
-generateExpression (AST.UnOpExpr AST.Negation expr) = (generateExpression expr) ++ "    neg    %eax\n"
-generateExpression (AST.UnOpExpr AST.Plus expr) = (generateExpression expr)
-generateExpression (AST.UnOpExpr AST.Not expr) = 
-                                        (generateExpression expr) ++
-                                        "    cmpl    $0, %eax\n" ++
-                                        "    movl    $0, %eax\n" ++
-                                        "    sete    %al\n"                
-generateExpression (AST.ConstExpr (AST.Int i))  = "    movl    $" ++ (show i) ++ ", %eax\n"
-generateExpression (AST.ConstExpr (AST.Char c)) = "    movl    $" ++ (show $ ord c) ++ ", %eax\n"
-generateExpression (AST.ConstExpr (AST.Oct o))  = "    movl    $" ++ (show$ fst $ head $ readOct o) ++ ", %eax\n"
-generateExpression (AST.ConstExpr (AST.Hex h))  = "    movl    $" ++ (show$ fst $ head $ readHex h) ++ ", %eax\n"
-
-generateExpression _ = error "Expression not supported"
-
+generateExpression expr = evalState (generateExpressionASM expr) 0
 ----------------------------------------------------------------------------
 -- generate assembly for a list of statements
 ----------------------------------------------------------------------------

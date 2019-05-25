@@ -27,6 +27,8 @@ library:
   dependencies:
     - parsec
     - containers
+    - mtl
+
 executables:
   hcc-exe:
     main:                Main.hs
